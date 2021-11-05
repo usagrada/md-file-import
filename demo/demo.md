@@ -2,4 +2,4 @@
 
 これはデモ用のファイルです
 
-#import(README.md)
+#import(../README.md)

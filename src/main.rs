@@ -32,6 +32,18 @@ fn exit() {
   std::process::exit(0x0100);
 }
 
+fn dir_type_check(input: &str) -> bool {
+  let disable_dir_type = ["dist/"];
+  if disable_dir_type
+    .iter()
+    .fold(false, |flag, f| flag || input.contains(f))
+  {
+    true
+  } else {
+    false
+  }
+}
+
 fn file_type_check(input: &str) -> bool {
   let enable_file_type = [".md", ".mdx", ".txt"];
   if enable_file_type
@@ -49,15 +61,23 @@ fn file_read(input: &str) {
     println!("This CLI doesn't allow file type of {} !!", input);
     exit();
   }
+  if dir_type_check(input){
+    println!("This CLI doesn't allow dist directory's file");
+    return;
+  }
 
   let mut file = File::open(input).expect("file not found");
   let mut contents = String::new();
   file.read_to_string(&mut contents).expect("File Read Error");
   let res = parse_file(&mut contents, input);
-  std::fs::create_dir_all(OUTPUT_DIR).expect("Directory Create Error");
-  let mut resfile = File::create([OUTPUT_DIR, input].join("/")).expect("create file error");
+  let mut dir: Vec<_> = input.split("/").collect();
+  dir.pop();
+  let output_dir = [OUTPUT_DIR, &dir.join("/")].join("/");
+  let output_file = [OUTPUT_DIR, input].join("/");
+  println!("output dir: {}", output_dir);
+  std::fs::create_dir_all(output_dir).expect("Directory Create Error");
+  let mut resfile = File::create(output_file).expect("create file error");
   resfile.write_all(res.as_bytes()).expect("write error");
-  // file.flush().expect("flush error");
 }
 
 fn parse_file(input: &str, filename: &str) -> String {
